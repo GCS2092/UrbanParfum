@@ -18,6 +18,11 @@ export const metadata = {
   description: 'Découvrez une nouvelle manière de choisir votre parfum. Fragrances uniques, inspirées par l\'émotion et l\'élégance.',
   icons: { icon: '/icon.svg', type: 'image/svg+xml' },
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'UrbanS',
+  },
 };
 
 export const viewport = {
