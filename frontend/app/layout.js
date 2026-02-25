@@ -17,9 +17,14 @@ export const metadata = {
   title: 'UrbanS – Parfums & signatures olfactives',
   description: 'Découvrez une nouvelle manière de choisir votre parfum. Fragrances uniques, inspirées par l\'émotion et l\'élégance.',
   icons: { icon: '/icon.svg', type: 'image/svg+xml' },
+  manifest: '/manifest.json',
 };
 
-export const viewport = { width: 'device-width', initialScale: 1 };
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#c9a96e',
+};
 
 export default function RootLayout({ children }) {
   return (
