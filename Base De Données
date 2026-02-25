@@ -1,0 +1,389 @@
+
+# 🗄️ Base de données – Site de vente de parfums (UrbanS)
+
+## 📌 Contexte du projet
+
+👉 **Base de données en place :** **PostgreSQL**, nom de la base **`UrbanS`** (déjà créée).
+
+La documentation ci-dessous décrit le schéma cible et les bonnes pratiques à appliquer sur cette base.
+
+---
+
+## 🎯 Objectif de la base de données
+
+La base de données doit permettre de :
+
+* Gérer les **parfums et leurs caractéristiques olfactives**
+* Organiser le **catalogue et les filtres** (genre, famille, occasion, intensité, univers émotionnel)
+* Gérer les **commandes avec ou sans compte**
+* Assurer le **paiement, la livraison et le suivi**
+* Stocker les **avis clients** (comptes et invités)
+* Garantir la **sécurité et la conformité des données** (RGPD)
+
+---
+
+## 🧱 Type de base de données
+
+👉 **PostgreSQL** – Base **`UrbanS`**
+
+* Données structurées et relations claires
+* Transactions fiables pour l’e-commerce
+* Conformité et évolutivité
+
+---
+
+## 🧩 Tables principales (structure logique)
+
+### 1️⃣ Table `users` (clients avec compte)
+
+> ⚠️ Un client peut commander **sans compte** (invité).
+
+**Champs :**
+
+* `user_id` (PK, SERIAL)
+* `nom` (VARCHAR)
+* `prenom` (VARCHAR)
+* `email` (VARCHAR UNIQUE NOT NULL)
+* `mot_de_passe` (VARCHAR, hashé avec bcrypt)
+* `telephone` (VARCHAR, nullable)
+* `date_creation` (TIMESTAMP DEFAULT NOW())
+* `role` (VARCHAR : 'client' | 'admin')
+* **RGPD :** `consentement_newsletter` (BOOLEAN DEFAULT false)
+* **RGPD :** `consentement_cookies` (BOOLEAN DEFAULT false)
+* **RGPD :** `date_consentement` (TIMESTAMP, nullable)
+
+---
+
+### 2️⃣ Table `guests` (commandes sans compte)
+
+Pour les commandes invitées et le suivi sans création de compte.
+
+**Champs :**
+
+* `guest_id` (PK, SERIAL)
+* `nom` (VARCHAR)
+* `prenom` (VARCHAR)
+* `email` (VARCHAR NOT NULL)
+* `telephone` (VARCHAR, nullable)
+* `date_creation` (TIMESTAMP DEFAULT NOW(), optionnel pour suivi)
+
+---
+
+### 3️⃣ Table `products` (parfums)
+
+Cœur du catalogue.
+
+**Champs :**
+
+* `product_id` (PK, SERIAL)
+* `nom_parfum` (VARCHAR NOT NULL)
+* `description` (TEXT)
+* `prix` (DECIMAL(10,2) NOT NULL)
+* `stock` (INTEGER DEFAULT 0)
+* `intensite` (VARCHAR : Légère | Modérée | Intense)
+* `type_parfum` (VARCHAR : EDT | EDP | Extrait)
+* `volume_ml` (INTEGER, ex. 50, 80, 100)
+* `saison` (VARCHAR : Printemps | Été | Automne | Hiver | Toutes)
+* `genre` (VARCHAR : Homme | Femme | Unisexe)
+* `image_principale` (VARCHAR, URL ou chemin)
+* `moment_utilisation` (VARCHAR, ex. Quotidien, Soirée, Événement – ou référence à une table)
+* `date_ajout` (TIMESTAMP DEFAULT NOW())
+* `actif` (BOOLEAN DEFAULT true)
+
+**Filtres catalogue (relation N–N via tables ci-dessous) :** familles olfactives, occasions, univers émotionnels.
+
+---
+
+### 4️⃣ Table `product_images` (galerie par produit)
+
+Plusieurs visuels par parfum (packaging, mise en situation).
+
+**Champs :**
+
+* `image_id` (PK, SERIAL)
+* `product_id` (FK → products)
+* `url` (VARCHAR NOT NULL)
+* `ordre` (INTEGER DEFAULT 0, pour l’affichage)
+* `legende` (VARCHAR, nullable)
+
+---
+
+### 5️⃣ Table `olfactive_families`
+
+Familles olfactives (Florale, Boisée, Orientale, Fraîche, Gourmande, etc.).
+
+**Champs :**
+
+* `family_id` (PK, SERIAL)
+* `nom_famille` (VARCHAR UNIQUE NOT NULL)
+
+---
+
+### 6️⃣ Table `product_families` (relation N–N)
+
+Un parfum peut appartenir à plusieurs familles olfactives.
+
+**Champs :**
+
+* `product_id` (FK → products)
+* `family_id` (FK → olfactive_families)
+* PK composite : (`product_id`, `family_id`)
+
+---
+
+### 7️⃣ Table `occasions`
+
+Occasions d’utilisation (Quotidien, Soirée, Événement, Cadeau, etc.).
+
+**Champs :**
+
+* `occasion_id` (PK, SERIAL)
+* `libelle` (VARCHAR UNIQUE NOT NULL)
+
+---
+
+### 8️⃣ Table `product_occasions` (relation N–N)
+
+**Champs :**
+
+* `product_id` (FK → products)
+* `occasion_id` (FK → occasions)
+* PK composite : (`product_id`, `occasion_id`)
+
+---
+
+### 9️⃣ Table `emotional_universes`
+
+Univers émotionnels (Élégant, Audacieux, Sensuel, Frais, Intemporel, etc.).
+
+**Champs :**
+
+* `universe_id` (PK, SERIAL)
+* `libelle` (VARCHAR UNIQUE NOT NULL)
+
+---
+
+### 🔟 Table `product_emotional_universes` (relation N–N)
+
+**Champs :**
+
+* `product_id` (FK → products)
+* `universe_id` (FK → emotional_universes)
+* PK composite : (`product_id`, `universe_id`)
+
+---
+
+### 1️⃣1️⃣ Table `olfactive_notes`
+
+Notes olfactives (tête, cœur, fond).
+
+**Champs :**
+
+* `note_id` (PK, SERIAL)
+* `nom_note` (VARCHAR NOT NULL)
+* `type_note` (VARCHAR : 'tête' | 'cœur' | 'fond')
+
+---
+
+### 1️⃣2️⃣ Table `product_notes` (relation N–N)
+
+**Champs :**
+
+* `product_id` (FK → products)
+* `note_id` (FK → olfactive_notes)
+* PK composite : (`product_id`, `note_id`)
+
+---
+
+### 1️⃣3️⃣ Table `orders` (commandes)
+
+Fonctionne pour **clients avec ou sans compte**. Adresse de livraison structurée.
+
+**Champs :**
+
+* `order_id` (PK, SERIAL)
+* `user_id` (FK → users, nullable)
+* `guest_id` (FK → guests, nullable)
+* `date_commande` (TIMESTAMP DEFAULT NOW())
+* `statut` (VARCHAR : en_cours | payee | expediee | livree | annulee)
+* `total` (DECIMAL(10,2) NOT NULL)
+* **Adresse structurée :**
+  * `adresse_ligne1` (VARCHAR NOT NULL)
+  * `adresse_ligne2` (VARCHAR, nullable)
+  * `code_postal` (VARCHAR NOT NULL)
+  * `ville` (VARCHAR NOT NULL)
+  * `pays` (VARCHAR NOT NULL)
+* `mode_paiement` (VARCHAR : carte | mobile | etc.)
+* Contrainte : **exactement un** de `user_id` ou `guest_id` rempli (CHECK ou contrainte applicative)
+
+---
+
+### 1️⃣4️⃣ Table `order_items` (détails de commande)
+
+**Champs :**
+
+* `order_item_id` (PK, SERIAL)
+* `order_id` (FK → orders)
+* `product_id` (FK → products)
+* `quantite` (INTEGER NOT NULL)
+* `prix_unitaire` (DECIMAL(10,2) NOT NULL)
+
+---
+
+### 1️⃣5️⃣ Table `payments`
+
+**Champs :**
+
+* `payment_id` (PK, SERIAL)
+* `order_id` (FK → orders UNIQUE)
+* `montant` (DECIMAL(10,2) NOT NULL)
+* `moyen_paiement` (VARCHAR)
+* `statut_paiement` (VARCHAR : en_attente | accepte | refuse | rembourse)
+* `date_paiement` (TIMESTAMP, nullable)
+* `reference_externe` (VARCHAR, nullable, ex. id Stripe)
+
+---
+
+### 1️⃣6️⃣ Table `reviews` (avis clients)
+
+Avis laissés par des **comptes clients** ou par des **invités** (après achat).
+
+**Champs :**
+
+* `review_id` (PK, SERIAL)
+* `product_id` (FK → products)
+* `user_id` (FK → users, nullable)
+* `guest_id` (FK → guests, nullable)
+* `note` (INTEGER CHECK (note >= 1 AND note <= 5))
+* `commentaire` (TEXT, nullable)
+* `date_avis` (TIMESTAMP DEFAULT NOW())
+* `modere` (BOOLEAN DEFAULT false, optionnel)
+* Contrainte : **exactement un** de `user_id` ou `guest_id` rempli
+
+---
+
+### 1️⃣7️⃣ Table `deliveries`
+
+**Champs :**
+
+* `delivery_id` (PK, SERIAL)
+* `order_id` (FK → orders UNIQUE)
+* `transporteur` (VARCHAR)
+* `numero_suivi` (VARCHAR, nullable)
+* `statut_livraison` (VARCHAR : en_preparation | expedie | en_transit | livree)
+* `date_expedition` (TIMESTAMP, nullable)
+* `date_livraison_estimee` (DATE, nullable)
+
+---
+
+## 📦 Tables fidélisation & marketing (intégrées au schéma)
+
+### 1️⃣8️⃣ Table `loyalty_points` (fidélisation)
+
+**Champs :**
+
+* `loyalty_id` (PK, SERIAL)
+* `user_id` (FK → users UNIQUE)
+* `points` (INTEGER DEFAULT 0)
+* `date_mise_a_jour` (TIMESTAMP DEFAULT NOW())
+* Optionnel : table `loyalty_history` (user_id, points_ajoutes, points_utilises, motif, date) pour l’historique
+
+---
+
+### 1️⃣9️⃣ Table `newsletter`
+
+Inscriptions à la newsletter (avec consentement RGPD).
+
+**Champs :**
+
+* `newsletter_id` (PK, SERIAL)
+* `email` (VARCHAR UNIQUE NOT NULL)
+* `date_inscription` (TIMESTAMP DEFAULT NOW())
+* `actif` (BOOLEAN DEFAULT true)
+* `source` (VARCHAR, nullable : 'site' | 'commande' | etc.)
+* `user_id` (FK → users, nullable, si lié à un compte)
+
+---
+
+### 2️⃣0️⃣ Table `promotions`
+
+**Champs :**
+
+* `promotion_id` (PK, SERIAL)
+* `code` (VARCHAR UNIQUE, ex. PROMO20)
+* `description` (TEXT, nullable)
+* `type` (VARCHAR : pourcentage | montant_fixe)
+* `valeur` (DECIMAL(10,2), ex. 20 pour 20 % ou 10 pour 10 €)
+* `date_debut` (TIMESTAMP NOT NULL)
+* `date_fin` (TIMESTAMP NOT NULL)
+* `usage_max` (INTEGER, nullable, nombre d’utilisations totales)
+* `actif` (BOOLEAN DEFAULT true)
+
+---
+
+### 2️⃣1️⃣ Table `gift_boxes` (coffrets cadeaux)
+
+**Champs :**
+
+* `gift_box_id` (PK, SERIAL)
+* `nom` (VARCHAR NOT NULL)
+* `description` (TEXT)
+* `prix` (DECIMAL(10,2) NOT NULL)
+* `image_principale` (VARCHAR)
+* `actif` (BOOLEAN DEFAULT true)
+* `date_ajout` (TIMESTAMP DEFAULT NOW())
+
+Table de liaison **`gift_box_products`** (coffret ↔ parfums) :
+
+* `gift_box_id` (FK → gift_boxes)
+* `product_id` (FK → products)
+* `quantite` (INTEGER DEFAULT 1)
+* PK composite : (`gift_box_id`, `product_id`)
+
+---
+
+## 🔐 Sécurité & conformité
+
+* Mots de passe **toujours hashés** (bcrypt ou équivalent), jamais en clair
+* Données personnelles **minimisées** ; champs RGPD explicites (`consentement_newsletter`, `consentement_cookies`, `date_consentement`)
+* **Suppression / anonymisation** des données sur demande (droit à l’oubli)
+* Accès **administrateur** séparé (rôle `admin` dans `users`)
+* **Sauvegardes régulières** de la base UrbanS
+* Requêtes **paramétrées** pour éviter les injections SQL
+* Connexion à la base en **SSL** en production
+
+---
+
+## 🧠 Schéma relationnel simplifié (après améliorations)
+
+```
+Users ──┬── Orders ── Order_items ── Products ── Product_images
+        │       │            │            ├── Product_families ── Olfactive_families
+        │       │            │            ├── Product_occasions ── Occasions
+        │       │            │            ├── Product_emotional_universes ── Emotional_universes
+        │       │            │            ├── Product_notes ── Olfactive_notes
+        │       │            │            └── Reviews
+        │       ├── Payments
+        │       └── Deliveries
+        ├── Loyalty_points
+        └── Newsletter (optionnel)
+
+Guests ──┬── Orders (même schéma qu’au-dessus)
+         └── Reviews (guest_id)
+
+Promotions (utilisée au moment de la commande)
+Gift_boxes ── Gift_box_products ── Products
+```
+
+---
+
+## ✅ Résumé
+
+La base **UrbanS** (PostgreSQL) est décrite pour être :
+
+* **Conforme au projet** : catalogue, filtres, commande avec/sans compte, avis, paiement, livraison
+* **Alignée avec la doc fonctionnelle** : occasions, univers émotionnels, images, adresses structurées, RGPD
+* **Évolutive** : fidélisation, newsletter, promotions, coffrets cadeaux
+* **Sécurisée et maintenable** : contraintes, rôles, bonnes pratiques
+
+Pour créer les tables dans **UrbanS**, tu peux t’appuyer sur un fichier de **migrations SQL** (à générer à partir de cette structure) ou un outil type Prisma / Drizzle en précisant la base `UrbanS`.

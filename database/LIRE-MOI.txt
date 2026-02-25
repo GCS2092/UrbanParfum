@@ -1,0 +1,81 @@
+============================================
+  CONFIGURATION BASE DE DONNÉES UrbanS
+============================================
+
+Les erreurs 500 sur /api/products et /api/filters/families viennent
+généralement d'une base non configurée ou de tables absentes.
+
+Important : sous Windows, si psql demande le mot de passe pour l'utilisateur
+« ThinkPad » et échoue, utilisez l'utilisateur PostgreSQL (souvent « postgres ») :
+  psql -U postgres -d UrbanS -f ...
+Entrez ensuite le mot de passe du compte postgres (pas le mot de passe Windows).
+
+ÉTAPES (à faire une seule fois) :
+
+1. Créer la base PostgreSQL (si pas déjà fait) :
+   createdb UrbanS
+   (ou via pgAdmin / outil graphique : créer une base nommée "UrbanS")
+
+2. Exécuter le schéma (création des tables) :
+   Depuis le dossier database (C:\UrbanS\database) :
+   psql -U postgres -d UrbanS -f schema.sql
+   (Sans -U postgres, Windows utilise votre utilisateur Windows ; si l’auth échoue, utilisez -U postgres et le mot de passe du compte postgres.)
+
+3. Exécuter les données de test :
+   psql -U postgres -d UrbanS -f seed.sql
+
+4. Configurer le backend (dossier backend) :
+   - Copier .env.example vers .env
+   - Renseigner DATABASE_URL, par exemple :
+     DATABASE_URL=postgresql://postgres:VOTRE_MOT_DE_PASSE@localhost:5432/UrbanS
+
+5. Redémarrer l'API (backend) :
+   npm run dev
+
+Vérification : ouvrir http://localhost:4000/api/health
+- Si "database": "connected" → tout est ok.
+- Si "database": "error" → vérifier DATABASE_URL et que schema.sql a bien été exécuté.
+
+COMPTES DE TEST (après seed) :
+- Admin  : admin@urbans.fr  / password
+- Client : client@urbans.fr / password
+
+Données : 8 parfums, familles olfactives, occasions, univers émotionnels, notes.
+
+6. Si les produits existent déjà SANS images : exécuter pour afficher les visuels au catalogue :
+   Depuis C:\UrbanS\database :
+   psql -U postgres -d UrbanS -f update-images.sql
+   (Depuis C:\UrbanS\backend : psql -U postgres -d UrbanS -f ../database/update-images.sql)
+
+Encodage : si les noms s'affichent en "Ã‰clat" au lieu de "Éclat", exécuter le script
+de correction. Depuis le dossier database, taper la commande complète (avec psql -f) :
+  psql -U postgres -d UrbanS -f fix-encoding.sql
+(Ne pas taper seulement "fix-encoding.sql" : il faut passer par psql -f.)
+Cela remet les noms et descriptions des parfums en UTF-8 correct.
+
+----------------------------------------
+ MIGRATION : Code postal optionnel
+----------------------------------------
+Si la base a été créée avant que code_postal soit optionnel, exécuter la migration.
+
+ATTENTION : ne pas coller le SQL dans PowerShell. PowerShell exécute des commandes
+Windows, pas du SQL. Il faut utiliser un client PostgreSQL (psql ou pgAdmin).
+
+Depuis le dossier database (C:\UrbanS\database), dans un terminal :
+
+  psql -U postgres -d UrbanS -f migration-code_postal-optional.sql
+
+(Remplacez "UrbanS" par le nom de votre base si différent, et "postgres" par votre
+utilisateur PostgreSQL si besoin.)
+
+Alternative : ouvrir pgAdmin (ou un autre outil), se connecter à la base, ouvrir
+le fichier migration-code_postal-optional.sql et exécuter la requête.
+
+----------------------------------------
+ MIGRATION : Discussions (admin / clients)
+----------------------------------------
+Pour activer les discussions entre l’admin et les clients inscrits :
+
+  psql -U postgres -d UrbanS -f migration-conversations.sql
+
+Cela crée les tables conversations et messages.

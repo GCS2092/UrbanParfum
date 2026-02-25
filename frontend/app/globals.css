@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply min-w-0 bg-urbans-cream text-urbans-noir antialiased;
+}
+
+/* Conteneur page */
+@layer components {
+  .container-page {
+    @apply mx-auto min-w-0 max-w-6xl px-4 sm:px-6;
+  }
+
+  .container-narrow {
+    @apply mx-auto min-w-0 max-w-2xl px-4 sm:px-6;
+  }
+
+  .container-form {
+    @apply mx-auto min-w-0 max-w-xl px-4 sm:px-6;
+  }
+
+  .page-title {
+    @apply font-display text-2xl font-semibold tracking-tight text-urbans-noir sm:text-3xl;
+  }
+
+  .page-title-sm {
+    @apply font-display text-xl font-semibold tracking-tight text-urbans-noir sm:text-2xl;
+  }
+
+  /* Boutons luxe : noir + accent or au survol */
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-full bg-urbans-noir px-6 py-3 text-sm font-medium text-urbans-cream transition-all hover:bg-urbans-warm focus-visible:outline focus-visible:ring-2 focus-visible:ring-urbans-gold focus-visible:ring-offset-2 focus-visible:ring-offset-urbans-cream active:scale-[0.98] sm:min-h-0;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-full border-2 border-urbans-noir bg-transparent px-6 py-3 text-sm font-medium text-urbans-noir transition-all hover:bg-urbans-noir hover:text-urbans-cream focus-visible:outline focus-visible:ring-2 focus-visible:ring-urbans-gold focus-visible:ring-offset-2 focus-visible:ring-offset-urbans-cream sm:min-h-0;
+  }
+
+  .input-field {
+    @apply min-h-[44px] w-full rounded-xl border border-urbans-stone bg-white px-4 py-3 text-base text-urbans-noir transition-colors placeholder:text-urbans-blush focus:border-urbans-gold focus:outline-none focus:ring-2 focus:ring-urbans-gold/20 sm:min-h-0;
+  }
+
+  .card {
+    @apply rounded-2xl bg-white shadow-soft border border-urbans-stone/50;
+  }
+
+  .card-hover {
+    @apply rounded-2xl bg-white shadow-soft border border-urbans-stone/50 transition-all duration-300 hover:shadow-soft-lg hover:border-urbans-gold/30;
+  }
+
+  /* Header : sélecteurs Langue & Devise */
+  .header-pill {
+    @apply inline-flex rounded-full border border-urbans-stone/60 bg-urbans-cream/60 p-0.5 shadow-sm;
+  }
+  .header-pill-btn {
+    @apply min-h-[36px] rounded-full px-3.5 text-xs font-semibold uppercase tracking-wide transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-urbans-gold/50 focus:ring-offset-1;
+  }
+  .header-pill-btn-active {
+    @apply bg-urbans-gold text-urbans-noir shadow-md;
+  }
+  .header-pill-btn-inactive {
+    @apply text-urbans-warm hover:bg-urbans-sand/80 hover:text-urbans-noir;
+  }
+  .header-currency-select {
+    @apply min-h-[36px] cursor-pointer rounded-full border border-urbans-stone/60 bg-urbans-cream/60 px-4 py-2 text-xs font-semibold text-urbans-noir shadow-sm transition-all focus:border-urbans-gold focus:outline-none focus:ring-2 focus:ring-urbans-gold/30 hover:border-urbans-gold/50;
+  }
+  .header-btn-outline {
+    @apply inline-flex min-h-[36px] items-center justify-center rounded-full border-2 border-urbans-gold/60 bg-transparent px-4 py-2 text-xs font-semibold text-urbans-noir transition-all hover:border-urbans-gold hover:bg-urbans-gold/10 focus:outline-none focus:ring-2 focus:ring-urbans-gold/40;
+  }
+}
+
+/* Animations légères (respecte prefers-reduced-motion) */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out both;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out both;
+  }
+  .animate-delay-1 { animation-delay: 0.1s; }
+  .animate-delay-2 { animation-delay: 0.2s; }
+  .animate-delay-3 { animation-delay: 0.3s; }
+  .animate-delay-4 { animation-delay: 0.4s; }
+  .animate-delay-5 { animation-delay: 0.5s; }
+}
